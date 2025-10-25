@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
 
+// CRUD Operations for Users
 export const getAllUsers = async () => {
   const res = await pool.query(
     `SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC`
@@ -78,4 +79,43 @@ export const updateUser = async (id, name, email) => {
 
 export const deleteUser = async (id) => {
   await pool.query("DELETE FROM users WHERE id = $1", [id]);
+};
+
+// Authentication
+export const findUserByEmail = async (email) => {
+  const res = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+  return res.rows[0];
+};
+
+export const createUserWithRole = async (
+  name,
+  email,
+  password,
+  role = "user"
+) => {
+  const { rows } = await pool.query(`
+    SELECT COALESCE(
+      (
+        SELECT MIN(t1.id + 1)
+        FROM users t1
+        LEFT JOIN users t2 ON t2.id = t1.id + 1
+        WHERE t2.id IS NULL
+      ),
+      1
+    ) AS next_id;
+  `);
+  const nextId = rows[0].next_id;
+
+  const res = await pool.query(
+    `INSERT INTO users (id, name, email, password, role)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, name, email, role, created_at;`,
+    [nextId, name, email, password, role]
+  );
+
+  await pool.query(
+    `SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));`
+  );
+
+  return res.rows[0];
 };
