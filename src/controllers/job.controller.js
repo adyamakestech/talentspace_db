@@ -1,6 +1,6 @@
 import {
   getAllJobs,
-  getAllJobsById,
+  getJobById,
   createJob,
   updateJob,
   deleteJob,
@@ -18,7 +18,7 @@ export const getJobs = async (req, res) => {
 
 export const getJob = async (req, res) => {
   try {
-    const job = await getAllJobsById(req.params.id);
+    const job = await getJobById(req.params.id);
     if (!job) return errorResponse(res, "Job not found", 404);
     successResponse(res, job);
   } catch (error) {
@@ -62,7 +62,7 @@ export const updateJobController = async (req, res) => {
 
 export const deleteJobController = async (req, res) => {
   try {
-    const job = await getAllJobsById(req.params.id);
+    const job = await getAllJobs(req.params.id);
     if (!job) return errorResponse(res, "Job not found", 404);
     await deleteJob(req.params.id);
     successResponse(res, null, "Job Deleted");

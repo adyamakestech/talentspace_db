@@ -8,7 +8,7 @@ export const getAllJobs = async () => {
   return res.rows;
 };
 
-export const getAllJobsById = async (id) => {
+export const getJobById = async (id) => {
   const res = await pool.query(
     `SELECT id, title, description,company_name, location, created_at FROM jobs WHERE id = $1`,
     [id]
@@ -25,12 +25,13 @@ export const createJob = async (
   user_id
 ) => {
   const { rows } = await pool.query(`
-    SELECT COALESCE((
-      SELECT MIN(t1.id + 1)
-      FROM jobs t1
-      LEFT JOIN jobs t2 ON t2.id = t1.id + 1
-      WHERE t2.id IS NULL
-    ), 1) AS next_id;
+    SELECT COALESCE(
+    (
+      SELECT MIN(missing_id)
+      FROM generate_series(1, COALESCE((SELECT MAX(id) FROM jobs), 0) + 1) AS missing_id
+      WHERE missing_id NOT IN (SELECT id FROM jobs)
+    ), 1
+  ) AS next_id;
   `);
 
   const nextId = rows[0].next_id;
@@ -42,7 +43,10 @@ export const createJob = async (
     [nextId, title, description, company_name, location, salary_range, user_id]
   );
 
-  await pool.query(`SELECT setval('jobs_id_seq', (SELECT MAX(id) FROM jobs));`);
+  await pool.query(`
+    SELECT setval('jobs_id_seq', (SELECT MAX(id) FROM jobs));
+  `);
+
   return res.rows[0];
 };
 
