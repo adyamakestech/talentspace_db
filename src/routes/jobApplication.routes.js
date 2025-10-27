@@ -27,4 +27,5 @@ router.delete(
   verifyToken,
   uploadFileHandler.delete
 );
+
 export default router;
