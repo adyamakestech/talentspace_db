@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import {
   getAllJobApplications,
   getApplicationById,
@@ -7,6 +9,7 @@ import {
   deleteApplication,
 } from "../models/jobApplication.model.js";
 import { getJobById } from "../models/job.model.js";
+import { uploadModel } from "../models/upload.model.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 
 // (Admin atau recruiter) - Ambil semua job application
@@ -104,3 +107,67 @@ export const removeApplication = async (req, res) => {
     errorResponse(res, error.message);
   }
 };
+
+// Handle file upload for job application
+export class uploadFileHandler {
+  static async handle(req, res) {
+    try {
+      const { application_id } = req.body;
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const fileData = uploadModel.saveFileInfo(req.file);
+      const publicUrl = uploadModel.getPublicUrl(fileData.path);
+
+      let updatedApp = null;
+      if (application_id) {
+        updatedApp = await uploadModel.saveToDatabase(
+          application_id,
+          fileData.path
+        );
+      }
+
+      return res.status(200).json({
+        message: "File uploaded successfully",
+        file: { ...fileData, url: publicUrl },
+        updated_application: updatedApp,
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      return res
+        .status(500)
+        .json({ message: "File upload failed", error: error.message });
+    }
+  }
+
+  static async delete(req, res) {
+    try {
+      const { filename } = req.params;
+
+      if (!filename) {
+        return res.status(400).json({ message: "Filename required" });
+      }
+
+      // Gunakan absolute path agar aman di berbagai OS
+      const filePath = path.resolve("uploads/applications", filename);
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      fs.unlinkSync(filePath);
+
+      return res.status(200).json({
+        message: "File deleted successfully",
+        file: filename,
+      });
+    } catch (error) {
+      console.error("Delete file error:", error);
+      return res.status(500).json({
+        message: "Failed to delete file",
+        error: error.message,
+      });
+    }
+  }
+}
