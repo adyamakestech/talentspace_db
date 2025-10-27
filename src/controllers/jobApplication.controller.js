@@ -143,13 +143,12 @@ export class uploadFileHandler {
 
   static async delete(req, res) {
     try {
-      const { filename } = req.params;
+      const { filename, application_id } = req.params;
 
       if (!filename) {
         return res.status(400).json({ message: "Filename required" });
       }
 
-      // Gunakan absolute path agar aman di berbagai OS
       const filePath = path.resolve("uploads/applications", filename);
 
       if (!fs.existsSync(filePath)) {
@@ -158,9 +157,15 @@ export class uploadFileHandler {
 
       fs.unlinkSync(filePath);
 
+      let updatedApp = null;
+      if (application_id) {
+        updatedApp = await uploadModel.removeFromDatabase(application_id);
+      }
+
       return res.status(200).json({
         message: "File deleted successfully",
         file: filename,
+        updated_application: updatedApp,
       });
     } catch (error) {
       console.error("Delete file error:", error);
