@@ -28,14 +28,11 @@ export const getJob = async (req, res) => {
 
 export const createJobController = async (req, res) => {
   try {
-    const {
-      title,
-      description,
-      company_name,
-      location,
-      salary_range,
-      user_id,
-    } = req.body;
+    const { title, description, company_name, location, salary_range } =
+      req.body;
+
+    const user_id = req.user.id;
+
     const newJob = await createJob(
       title,
       description,
@@ -44,9 +41,10 @@ export const createJobController = async (req, res) => {
       salary_range,
       user_id
     );
-    successResponse(res, newJob, "Job Created", 201);
+
+    return successResponse(res, newJob, "Job created successfully", 201);
   } catch (error) {
-    errorResponse(res, error.message);
+    return errorResponse(res, error.message);
   }
 };
 

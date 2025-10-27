@@ -17,28 +17,11 @@ export const getUserById = async (id) => {
 };
 
 export const createUser = async (name, email, password) => {
-  const { rows } = await pool.query(`
-    SELECT COALESCE(
-      (
-        SELECT MIN(t1.id + 1)
-        FROM users t1
-        LEFT JOIN users t2 ON t2.id = t1.id + 1
-        WHERE t2.id IS NULL
-      ),
-      1
-    ) AS next_id;
-  `);
-  const nextId = rows[0].next_id;
-  let res;
-  res = await pool.query(
-    `INSERT INTO users (id, name, email, password)
-     VALUES ($1, $2, $3, $4)
+  const res = await pool.query(
+    `INSERT INTO users (name, email, password)
+     VALUES ($1, $2, $3)
      RETURNING id, name, email, role, created_at;`,
-    [nextId, name, email, password]
-  );
-
-  await pool.query(
-    `SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));`
+    [name, email, password]
   );
 
   return res.rows[0];
@@ -93,28 +76,11 @@ export const createUserWithRole = async (
   password,
   role = "user"
 ) => {
-  const { rows } = await pool.query(`
-    SELECT COALESCE(
-      (
-        SELECT MIN(t1.id + 1)
-        FROM users t1
-        LEFT JOIN users t2 ON t2.id = t1.id + 1
-        WHERE t2.id IS NULL
-      ),
-      1
-    ) AS next_id;
-  `);
-  const nextId = rows[0].next_id;
-
   const res = await pool.query(
-    `INSERT INTO users (id, name, email, password, role)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO users (name, email, password, role)
+     VALUES ($1, $2, $3, $4)
      RETURNING id, name, email, role, created_at;`,
-    [nextId, name, email, password, role]
-  );
-
-  await pool.query(
-    `SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));`
+    [name, email, password, role]
   );
 
   return res.rows[0];

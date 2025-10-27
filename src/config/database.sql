@@ -25,3 +25,16 @@ CREATE TABLE public.jobs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- job_application.sql
+-- Schema definition for 'job_application' table in talentspace_db
+
+CREATE TABLE public.job_application (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES public.users(id) ON DELETE CASCADE,
+    job_id INTEGER REFERENCES public.jobs(id) ON DELETE CASCADE,
+    cover_letter TEXT,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'shortlisted', 'accepted', 'rejected')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

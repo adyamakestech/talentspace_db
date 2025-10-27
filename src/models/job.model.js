@@ -24,29 +24,12 @@ export const createJob = async (
   salary_range,
   user_id
 ) => {
-  const { rows } = await pool.query(`
-    SELECT COALESCE(
-    (
-      SELECT MIN(missing_id)
-      FROM generate_series(1, COALESCE((SELECT MAX(id) FROM jobs), 0) + 1) AS missing_id
-      WHERE missing_id NOT IN (SELECT id FROM jobs)
-    ), 1
-  ) AS next_id;
-  `);
-
-  const nextId = rows[0].next_id;
-
   const res = await pool.query(
-    `INSERT INTO jobs (id, title, description, company_name, location, salary_range, user_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING id, title, description, company_name, location, salary_range, user_id, created_at;`,
-    [nextId, title, description, company_name, location, salary_range, user_id]
+    `INSERT INTO jobs (title, description, company_name, location, salary_range, user_id)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING title, description, company_name, location, salary_range, user_id, created_at;`,
+    [title, description, company_name, location, salary_range, user_id]
   );
-
-  await pool.query(`
-    SELECT setval('jobs_id_seq', (SELECT MAX(id) FROM jobs));
-  `);
-
   return res.rows[0];
 };
 
