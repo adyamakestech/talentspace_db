@@ -12,9 +12,12 @@ import { getJobById } from "../models/job.model.js";
 import { uploadModel } from "../models/upload.model.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 
-// (Admin atau recruiter) - Ambil semua job application
+/**
+ * (Admin / Recruiter) - Ambil semua job applications
+ */
 export const fetchAllApplications = async (req, res) => {
   try {
+    // Ambil semua aplikasi dari DB
     const applications = await getAllJobApplications();
     successResponse(res, applications);
   } catch (error) {
@@ -22,12 +25,16 @@ export const fetchAllApplications = async (req, res) => {
   }
 };
 
-// Ambil semua application milik user (talent)
+/**
+ * Ambil semua aplikasi milik user tertentu (Talent)
+ */
 export const fetchApplicationsByUser = async (req, res) => {
   try {
     const { user_id } = req.params;
+    // Ambil aplikasi user
     const applications = await getApplicationById(user_id);
 
+    // check jika tidak ada aplikasi
     if (applications.length === 0)
       return errorResponse(res, "No applications found for this user", 404);
 
@@ -37,7 +44,9 @@ export const fetchApplicationsByUser = async (req, res) => {
   }
 };
 
-// Ambil semua pelamar berdasarkan job_id (recruiter)
+/**
+ * Ambil semua aplikasi berdasarkan job_id (Recruiter)
+ */
 export const fetchApplicationsByJob = async (req, res) => {
   try {
     const { job_id } = req.params;
@@ -52,19 +61,22 @@ export const fetchApplicationsByJob = async (req, res) => {
   }
 };
 
-// Talent apply ke job
+/**
+ * Talent apply ke job
+ */
 export const createApplication = async (req, res) => {
   try {
     const { user_id, job_id, cover_letter } = req.body;
 
+    // Validasi input
     if (!user_id || !job_id)
       return errorResponse(res, "user_id and job_id are required", 400);
 
-    // Cek apakah job valid
+    // Cek apakah job ada
     const job = await getJobById(job_id);
     if (!job) return errorResponse(res, "Job not found", 404);
 
-    // Simpan aplikasi baru
+    // Simpan aplikasi baru ke DB
     const application = await applyJob({ user_id, job_id, cover_letter });
     successResponse(
       res,
@@ -77,7 +89,9 @@ export const createApplication = async (req, res) => {
   }
 };
 
-// Recruiter update status aplikasi
+/**
+ * Recruiter update status aplikasi
+ */
 export const updateApplicationStatusController = async (req, res) => {
   try {
     const { id } = req.params;
@@ -94,7 +108,9 @@ export const updateApplicationStatusController = async (req, res) => {
   }
 };
 
-// Talent withdraw / hapus aplikasi
+/**
+ * Talent withdraw / hapus aplikasi
+ */
 export const removeApplication = async (req, res) => {
   try {
     const { id } = req.params;
@@ -108,20 +124,28 @@ export const removeApplication = async (req, res) => {
   }
 };
 
-// Handle file upload for job application
+/**
+ * Class untuk handle upload dan delete file untuk job applications
+ */
 export class uploadFileHandler {
+  /**
+   * Upload file
+   */
   static async handle(req, res) {
     try {
       const { application_id } = req.body;
+
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
+      // Simpan info file
       const fileData = uploadModel.saveFileInfo(req.file);
       const publicUrl = uploadModel.getPublicUrl(fileData.path);
 
       let updatedApp = null;
       if (application_id) {
+        // Update path file di database jika application_id tersedia
         updatedApp = await uploadModel.saveToDatabase(
           application_id,
           fileData.path
@@ -141,6 +165,9 @@ export class uploadFileHandler {
     }
   }
 
+  /**
+   * Delete file
+   */
   static async delete(req, res) {
     try {
       const { filename, application_id } = req.params;
@@ -151,14 +178,17 @@ export class uploadFileHandler {
 
       const filePath = path.resolve("uploads/applications", filename);
 
+      // Cek apakah file ada
       if (!fs.existsSync(filePath)) {
         return res.status(404).json({ message: "File not found" });
       }
 
+      // Hapus file dari filesystem
       fs.unlinkSync(filePath);
 
       let updatedApp = null;
       if (application_id) {
+        // Hapus reference file di DB jika application_id tersedia
         updatedApp = await uploadModel.removeFromDatabase(application_id);
       }
 
@@ -169,10 +199,9 @@ export class uploadFileHandler {
       });
     } catch (error) {
       console.error("Delete file error:", error);
-      return res.status(500).json({
-        message: "Failed to delete file",
-        error: error.message,
-      });
+      return res
+        .status(500)
+        .json({ message: "Failed to delete file", error: error.message });
     }
   }
 }

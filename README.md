@@ -1,7 +1,3 @@
-Berikut contoh **README.md** lengkap dan profesional untuk proyek backend kamu — `talentspace_be` — berdasarkan struktur kode dan fungsi yang kamu berikan:
-
----
-
 # 🧠 TalentSpace Backend (`talentspace_be`)
 
 Backend API untuk platform **TalentSpace**, sebuah sistem rekrutmen yang menghubungkan **pencari kerja (job seekers)** dengan **recruiter / employer**.
@@ -205,20 +201,11 @@ mkdir uploads
 
 ---
 
-## 💡 Tips Pengembangan
-
-- Gunakan `dotenv` untuk environment variables.
-- Gunakan `bcrypt` untuk hashing password.
-- Tambahkan **cloud storage** (misalnya AWS S3) jika ingin file upload lebih aman.
-- Implementasikan **rate limiting** di middleware keamanan jika project publik.
-
----
-
 ## 🧑‍💻 Kontributor
 
-| Nama | Peran                             |
-| ---- | --------------------------------- |
-| Adia | Backend Developer & Project Owner |
+| Nama          | Peran                             |
+| ------------- | --------------------------------- |
+| Adia Ginansah | Backend Developer & Project Owner |
 
 ---
 

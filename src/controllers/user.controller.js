@@ -8,8 +8,12 @@ import {
 import { hashPassword } from "../utils/bcrypt.js";
 import { successResponse, errorResponse } from "../utils/response.js";
 
+/**
+ * Ambil semua user
+ */
 export const getUsers = async (req, res) => {
   try {
+    // Panggil model untuk ambil semua user
     const users = await getAllUsers();
     successResponse(res, users);
   } catch (error) {
@@ -17,9 +21,14 @@ export const getUsers = async (req, res) => {
   }
 };
 
+/**
+ * Ambil user berdasarkan ID
+ */
 export const getUser = async (req, res) => {
   try {
+    // Cari user berdasarkan param id
     const user = await getUserById(req.params.id);
+    // Jika user tidak ditemukan
     if (!user) return errorResponse(res, "User not found", 404);
     successResponse(res, user);
   } catch (error) {
@@ -27,33 +36,53 @@ export const getUser = async (req, res) => {
   }
 };
 
+/**
+ * Buat user baru
+ */
 export const createUserController = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+
+    // Hash password sebelum disimpan
     const hashedPassword = await hashPassword(password);
+
+    // Simpan user baru ke DB
     const newUser = await createUser(name, email, hashedPassword, role);
+
     successResponse(res, newUser, "User Created", 201);
   } catch (error) {
     errorResponse(res, error.message);
   }
 };
 
+/**
+ * Update data user
+ */
 export const updateUserController = async (req, res) => {
   try {
     const { name, email, role } = req.body;
+
     const updatedUser = await updateUser(req.params.id, name, email, role);
+
     if (!updatedUser) return errorResponse(res, "User not found", 404);
+
     successResponse(res, updatedUser, "User Updated");
   } catch (error) {
     errorResponse(res, error.message);
   }
 };
 
+/**
+ * Hapus user
+ */
 export const deleteUserController = async (req, res) => {
   try {
+    // Cek apakah user ada
     const user = await getUserById(req.params.id);
     if (!user) return errorResponse(res, "User not found", 404);
+
     await deleteUser(req.params.id);
+
     successResponse(res, null, "User Deleted");
   } catch (error) {
     errorResponse(res, error.message);
