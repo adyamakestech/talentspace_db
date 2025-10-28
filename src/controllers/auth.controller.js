@@ -21,7 +21,6 @@ export const register = async (req, res) => {
     // Buat user baru dengan role default "user"
     const user = await createUserWithRole(name, email, hashedPassword, "user");
 
-    // Kirim response sukses tanpa menampilkan password
     successResponse(
       res,
       { id: user.id, name: user.name, email: user.email, role: user.role },
@@ -29,7 +28,6 @@ export const register = async (req, res) => {
       201
     );
   } catch (error) {
-    // Tangani error dan kirim response error
     errorResponse(res, error.message);
   }
 };
@@ -57,14 +55,12 @@ export const login = async (req, res) => {
       { expiresIn: "1h" } // Token berlaku 1 jam
     );
 
-    // Kirim response sukses beserta token
     successResponse(
       res,
       { token, user: { id: user.id, email: user.email, role: user.role } },
       "Login successful"
     );
   } catch (error) {
-    // Tangani error dan kirim response error
     errorResponse(res, error.message);
   }
 };
